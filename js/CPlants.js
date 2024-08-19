@@ -521,6 +521,45 @@ var CPlants = NewO({
             }, [b, $(b), 20, 0, a.AttackedLX, a.R, 0, 0, a.AttackedLX - 40, oGd.$Torch])
         }
     }),
+oRedPeashooter = InheritO(oPeashooter, {
+    EName: "oRedPeashooter",
+    CName: "红色豌豆射手",
+    SunNum: 125, // Slightly more expensive than regular peashooter
+    PicArr: ["images/Card/Plants/Peashooter.png", "images/Plants/Peashooter/0.gif", "images/Plants/Peashooter/Peashooter.gif", "images/Plants/PB00.gif", "images/Plants/PeaBulletHit.gif"],
+    Tooltip: "向敌人射出红色豌豆，造成更多伤害",
+    Produce: '红色豌豆射手，发射威力更强的红色豌豆。\n\n伤害：较高',
+    
+    PrivateBirth: function(a) {
+        var ele = NewEle(a.id + '_Img', "div", `position:absolute;width:71px;height:71px;left:0;top:0;background:url(${this.PicArr[2]}) no-repeat;`, {}, $(a.id));
+        ele.style.filter = "hue-rotate(120deg) saturate(150%)"; // Apply red hue
+        a.BulletEle = NewImg(0, a.PicArr[3], `left:${a.AttackedLX - 40}px;top:${a.pixelTop + 3}px;visibility:hidden;z-index:${a.zIndex + 2}`);
+        a.BulletEle.style.filter = "hue-rotate(120deg) saturate(150%)"; // Apply red hue to bullet
+    },
+
+    NormalAttack: function() {
+        var a = this, b = "PB" + Math.random();
+        EditEle(a.BulletEle.cloneNode(false), { id: b }, 0, EDPZ);
+        $(b).style.filter = "hue-rotate(120deg) saturate(150%)"; // Apply red hue to fired bullet
+
+        oSym.addTask(15, function(d) {
+            var c = $(d);
+            c && SetVisible(c)
+        }, [b]);
+
+        oSym.addTask(1, function(f, j, h, c, n, i, m, k, o, g) {
+            var l, e = GetC(n), d = oZ["getZ" + c](n, i);
+            if (d && d.Altitude == 1) {
+                d.getPea(d, h + 10, c); // Increased damage
+                SetStyle(j, { left: o + 28 + "px" }).src = a.PicArr[4];
+                oSym.addTask(10, ClearChild, [j]);
+            } else {
+                n += (l = !c ? 5 : -5);
+                j.style.left = (o += l) + "px";
+                (o > 900 || o < 100) ? ClearChild(j) : oSym.addTask(1, arguments.callee, [f, j, h, c, n, i, m, k, o, g]);
+            }
+        }, [b, $(b), 30, 0, a.AttackedLX, a.R, 0, 0, a.AttackedLX - 40, oGd.$Torch]);
+    }
+}),
     oLotusRoot = InheritO(oPeashooter, {
         EName: "oLotusRoot",
         CName: "莲藕火箭炮",
