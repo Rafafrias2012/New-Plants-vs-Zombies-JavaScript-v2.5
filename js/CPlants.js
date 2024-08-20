@@ -560,6 +560,61 @@ oRedPeashooter = InheritO(oPeashooter, {
         }, [b, $(b), 30, 0, a.AttackedLX, a.R, 0, 0, a.AttackedLX - 40, oGd.$Torch]);
     }
 }),
+oSunShooter = InheritO(oPeashooter, {
+    EName: "oSunShooter",
+    CName: "阳光射手",
+    SunNum: 150,
+    PicArr: [
+        "images/Card/Plants/Peashooter.png",
+        "images/Plants/Peashooter/0.gif",
+        "images/Plants/Peashooter/Peashooter.gif",
+        "images/Plants/PB00.gif",
+        "images/Plants/PeaBulletHit.gif"
+    ],
+    Tooltip: "发射带有阳光效果的豌豆",
+    Produce: '阳光射手发射带有阳光效果的豌豆，造成伤害的同时有几率产生阳光。',
+    
+    PrivateBirth: function(self) {
+        var ele = self.Ele = $(self.id);
+        ele.childNodes[1].style.filter = "hue-rotate(60deg) brightness(1.2)";
+        self.BulletEle = NewImg(0, self.PicArr[3], `left:${self.AttackedLX - 40}px;top:${self.pixelTop + 3}px;visibility:hidden;z-index:${self.zIndex + 2}`);
+        self.BulletEle.style.filter = "hue-rotate(60deg) brightness(1.2)";
+    },
+    
+    NormalAttack: function() {
+        var self = this, 
+            bulletId = "SB" + Math.random();
+        
+        EditEle(self.BulletEle.cloneNode(false), { id: bulletId }, 0, EDPZ);
+        
+        oSym.addTask(15, function(id) {
+            var ele = $(id);
+            ele && SetVisible(ele);
+        }, [bulletId]);
+        
+        oSym.addTask(1, function(id, bullet, damage, direction, x, row, sunChance, lastCol, left) {
+            var newX = x + (direction ? -5 : 5),
+                targetZombie = oZ["getZ" + direction](newX, row);
+            
+            if (targetZombie && targetZombie.Altitude == 1) {
+                targetZombie.getPea(targetZombie, damage, direction);
+                bullet.src = self.PicArr[4];
+                bullet.style.left = `${left + 28}px`;
+                oSym.addTask(10, ClearChild, [bullet]);
+                
+                // Chance to produce sun
+                if (Math.random() < sunChance) {
+                    AppearSun(GetX(GetC(x)), GetY(row), 25, 0);
+                }
+            } else if (newX > 100 && newX < oS.W) {
+                bullet.style.left = `${left + (direction ? -5 : 5)}px`;
+                oSym.addTask(1, arguments.callee, [id, bullet, damage, direction, newX, row, sunChance, lastCol, left + (direction ? -5 : 5)]);
+            } else {
+                ClearChild(bullet);
+            }
+        }, [bulletId, $(bulletId), 20, 0, self.AttackedLX, self.R, 0.1, 0, self.AttackedLX - 40]);
+    }
+}),
     oLotusRoot = InheritO(oPeashooter, {
         EName: "oLotusRoot",
         CName: "莲藕火箭炮",
