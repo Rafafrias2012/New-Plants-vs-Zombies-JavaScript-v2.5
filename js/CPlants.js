@@ -3319,7 +3319,73 @@ oCactus = InheritO(CPlants, {
             $P[j] && (h.childNodes[1].src = "images/Plants/LaserPea/LaserPea.gif", SetHidden($(i)))
         })
     }
-}), oGoldenPrize = InheritO(CPlants, {
+}),
+oUraniumPeashooter = InheritO(oPeashooter, {
+    EName: "oUraniumPeashooter",
+    CName: "铀豌豆射手",
+    width: 71,
+    height: 71,
+    beAttackedPointR: 51,
+    SunNum: 150,
+    PicArr: ["images/Card/Plants/Peashooter.png", "images/Plants/Peashooter/0.gif", "images/Plants/Peashooter/Peashooter.gif", "images/Plants/PB00.gif", "images/Plants/PeaBulletHit.gif"],
+    Tooltip: "发射带有辐射的铀豌豆",
+    Produce: '铀豌豆射手发射带有辐射的豌豆，造成持续伤害。\n\n伤害：高\n特点：造成持续伤害\n\n"我感觉浑身充满了能量！"铀豌豆射手兴奋地说道，"不过我希望大家靠近我的时候要小心一点。"',
+    
+    PrivateBirth: function(self) {
+        var ele = self.Ele = $(self.id);
+        ele.style.filter = "hue-rotate(120deg) brightness(1.2) saturate(1.5)";
+        self.BulletEle = NewImg(0, self.PicArr[3], "left:" + (self.AttackedLX - 40) + "px;top:" + (self.pixelTop + 3) + "px;visibility:hidden;z-index:" + (self.zIndex + 2));
+        self.BulletEle.style.filter = "hue-rotate(120deg) brightness(1.2) saturate(1.5)";
+    },
+    
+    NormalAttack: function() {
+        var self = this, 
+            bulletId = "PB" + Math.random();
+        
+        var newBullet = self.BulletEle.cloneNode(false);
+        newBullet.id = bulletId;
+        EDPZ.appendChild(newBullet);
+        
+        oSym.addTask(15, function(id) {
+            var ele = $(id);
+            ele && SetVisible(ele);
+        }, [bulletId]);
+        
+        oSym.addTask(1, function(id, bullet, attackPower, direction, x, row, type, lastCol, originX) {
+            var newX, targetCol = GetC(x),
+                zombie = oZ["getZ" + direction](x, row);
+            
+            if (zombie && zombie.Altitude == 1) {
+                zombie.getPea(zombie, attackPower, direction);
+                bullet.src = self.PicArr[4];
+                bullet.style.left = (originX + 28) + "px";
+                oEffects.Animate(bullet, {opacity: 0}, 0.5, 'linear', ClearChild);
+                
+                // 添加持续伤害效果
+                if (!zombie.isRadiated) {
+                    zombie.isRadiated = true;
+                    oSym.addTask(100, function radiate(z) {
+                        if (z.HP > 0 && z.isRadiated) {
+                            z.HP -= 5;
+                            oSym.addTask(100, radiate, [z]);
+                        } else {
+                            z.isRadiated = false;
+                        }
+                    }, [zombie]);
+                }
+            } else {
+                newX = x + (direction ? -5 : 5);
+                if (newX > 900 || newX < 100) {
+                    ClearChild(bullet);
+                } else {
+                    bullet.style.left = (originX += (direction ? -5 : 5)) + "px";
+                    oSym.addTask(1, arguments.callee, [id, bullet, attackPower, direction, newX, row, type, targetCol, originX]);
+                }
+            }
+        }, [bulletId, $(bulletId), 40, 0, self.AttackedLX, self.R, 0, 0, self.AttackedLX - 40]);
+    }
+}),
+oGoldenPrize = InheritO(CPlants, {
     EName: "oGoldenPrize",
     CName: "金葵花奖杯",
     PicArr: ["images/interface/0.gif", "images/interface/0.gif"],
