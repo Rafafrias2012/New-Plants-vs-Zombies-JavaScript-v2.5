@@ -2473,6 +2473,53 @@ oSunShooter = InheritO(oPeashooter, {
             }, [a])
         }
     }),
+    oDoomNuclearShroom = InheritO(oDoomShroom, {
+    EName: "oDoomNuclearShroom",
+    CName: "核爆末日菇",
+    coolTime: 50,
+    SunNum: 200,
+    PicArr: (function() {
+        var arr = [];
+        for (var i = 0; i < oDoomShroom.PicArr.length; i++) {
+            arr.push(oDoomShroom.PicArr[i]);
+        }
+        return arr;
+    })(),
+    Tooltip: "造成巨大的核爆炸，并留下辐射",
+    Produce: '核爆末日菇能造成巨大的爆炸，并在原地留下持续的辐射。\n\n伤害：极高\n范围：很大\n特点：留下辐射\n\n核爆末日菇："我们不该玩弄如此强大的力量，但既然已经这样了，不如痛快地来一发吧！"',
+    
+    InitTrigger: function() {},
+    getHurt: function() {},
+    PrivateBirth: function(self) {
+        var ele = self.Ele = $(self.id);
+        ele.style.cssText += ";filter:hue-rotate(100deg) saturate(150%) brightness(120%);";
+        self.BoomGIF = self.PicArr[3];
+    },
+    PrivateDie: function(self) {},
+    
+    NormalAttack: function() {
+        var self = this, id = self.id;
+        PlayAudio("doomshroom");
+        var ele = self.Ele;
+        ele.childNodes[1].src = self.BoomGIF;
+        ele.style.cssText += ";filter:hue-rotate(100deg) saturate(200%) brightness(150%);";
+        oSym.addTask(80, function(i) {
+            var c = $P[i];
+            if (c) {
+                var R = c.R, C = c.C, ZR = oS.R, MaxR = ZR + 1, MinR = ZR - 2, MaxC = 9, MinC = 0;
+                do {
+                    for (var col = MinC; col <= MaxC; col++) {
+                        var Z = oZ.getZ0(R, col);
+                        Z && Z.getExplosion();
+                    }
+                } while (R++ < MaxR);
+                c.Die();
+                var crater = NewEle("dCrater" + Math.random(), "div", "position:absolute;z-index:1;width:100px;height:82px;left:" + (c.pixelLeft - 10) + "px;top:" + (c.pixelTop + 30) + "px;background:url(images/interface/Crater.png);filter:hue-rotate(100deg) saturate(150%) brightness(120%);", 0, EDPZ);
+                oSym.addTask(3000, ClearChild, [crater]);
+            }
+        }, [id]);
+    }
+}),
     oTangleKlep = InheritO(CPlants, {
         EName: "oTangleKlep",
         CName: "缠绕水草",
